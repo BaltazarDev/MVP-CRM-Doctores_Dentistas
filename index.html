@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Médico - Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c7fb8;
+            --secondary-color: #4CAF50;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+        }
+        
+        .sidebar {
+            background-color: var(--primary-color);
+            color: white;
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .sidebar a:hover, .sidebar a.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding-left: 30px;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .card-custom {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .card-custom:hover {
+            transform: translateY(-5px);
+        }
+        
+        .dashboard-stats .card-body {
+            text-align: center;
+        }
+        
+        .dashboard-stats i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .card-patients {
+            border-top: 4px solid #4CAF50;
+        }
+        
+        .card-appointments {
+            border-top: 4px solid #2196F3;
+        }
+        
+        .card-payments {
+            border-top: 4px solid #FF9800;
+        }
+        
+        .card-revenue {
+            border-top: 4px solid #9C27B0;
+        }
+        
+        .patient-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .appointment-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .appointment-confirmed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .appointment-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .appointment-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn-custom {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-custom:hover {
+            background-color: #1a6490;
+            color: white;
+        }
+        
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        .form-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .file-upload {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(44, 127, 184, 0.05);
+        }
+        
+        .attachment-item {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .deposit-badge {
+            background-color: #4CAF50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="logo">
+                    <i class="fas fa-stethoscope me-2"></i> CRM Médico
+                </div>
+                <a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+                <a href="#" data-section="patients"><i class="fas fa-users me-2"></i> Pacientes</a>
+                <a href="#" data-section="appointments"><i class="fas fa-calendar-check me-2"></i> Citas</a>
+                <a href="#" data-section="history"><i class="fas fa-history me-2"></i> Historial</a>
+                <a href="#" data-section="files"><i class="fas fa-folder me-2"></i> Expedientes</a>
+                <a href="#" data-section="calendar"><i class="fas fa-calendar-alt me-2"></i> Google Calendar</a>
+                <a href="#" data-section="settings"><i class="fas fa-cog me-2"></i> Configuración</a>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="content-section">
+                    <h2 class="mb-4">Dashboard</h2>
+                    
+                    <!-- Stats Cards -->
+                    <div class="row dashboard-stats">
+                        <div class="col-md-3">
+                            <div class="card card-custom card-patients">
+                                <div class="card-body">
+                                    <i class="fas fa-users text-success"></i>
+                                    <h5 id="total-patients">0</h5>
+                                    <p class="text-muted">Pacientes Totales</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-custom card-appointments">
+                                <div class="card-body">
+                                    <i class="fas fa-calendar-check text-primary"></i>
+                                    <h5 id="today-appointments">0</h5>
+                                    <p class="text-muted">Citas Hoy</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-custom card-payments">
+                                <div class="card-body">
+                                    <i class="fas fa-money-bill-wave text-warning"></i>
+                                    <h5 id="total-deposits">$0</h5>
+                                    <p class="text-muted">Anticipos Cobrados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-custom card-revenue">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-line text-purple"></i>
+                                    <h5 id="month-revenue">$0</h5>
+                                    <p class="text-muted">Ingresos del Mes</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Pacientes por Mes</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="patientsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Tipos de Citas</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="appointmentsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Appointments -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card card-custom">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5>Próximas Citas</h5>
+                                    <button class="btn btn-custom btn-sm" id="newAppointmentBtn">
+                                        <i class="fas fa-plus me-1"></i> Nueva Cita
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Paciente</th>
+                                                    <th>Fecha y Hora</th>
+                                                    <th>Tipo</th>
+                                                    <th>Anticipo</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="appointmentsTable">
+                                                <!-- Las citas se cargarán con JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Patients Section -->
+                <div id="patients" class="content-section" style="display:none;">
+                    <h2 class="mb-4">Gestión de Pacientes</h2>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <h5><i class="fas fa-user-plus me-2"></i> Registrar Nuevo Paciente</h5>
+                                <form id="patientForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="patientName" class="form-label">Nombre Completo *</label>
+                                                <input type="text" class="form-control" id="patientName" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="patientPhone" class="form-label">Teléfono *</label>
+                                                <input type="tel" class="form-control" id="patientPhone" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="patientEmail" class="form-label">Correo Electrónico</label>
+                                                <input type="email" class="form-control" id="patientEmail">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="patientBirthdate" class="form-label">Fecha de Nacimiento</label>
+                                                <input type="date" class="form-control" id="patientBirthdate">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="patientAddress" class="form-label">Dirección</label>
+                                                <textarea class="form-control" id="patientAddress" rows="3"></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="patientNotes" class="form-label">Notas Médicas Iniciales</label>
+                                                <textarea class="form-control" id="patientNotes" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-custom">
+                                        <i class="fas fa-save me-1"></i> Guardar Paciente
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Lista de Pacientes</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Paciente</th>
+                                                    <th>Contacto</th>
+                                                    <th>Última Cita</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="patientsTable">
+                                                <!-- Los pacientes se cargarán con JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Appointments Section -->
+                <div id="appointments" class="content-section" style="display:none;">
+                    <h2 class="mb-4">Gestión de Citas</h2>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <h5><i class="fas fa-calendar-plus me-2"></i> Agendar Nueva Cita</h5>
+                                <form id="appointmentForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="appointmentPatient" class="form-label">Paciente *</label>
+                                                <select class="form-control" id="appointmentPatient" required>
+                                                    <option value="">Seleccione un paciente</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="appointmentDate" class="form-label">Fecha *</label>
+                                                <input type="date" class="form-control" id="appointmentDate" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="appointmentTime" class="form-label">Hora *</label>
+                                                <input type="time" class="form-control" id="appointmentTime" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="appointmentType" class="form-label">Tipo de Cita *</label>
+                                                <select class="form-control" id="appointmentType" required>
+                                                    <option value="">Seleccione un tipo</option>
+                                                    <option value="Consulta">Consulta General</option>
+                                                    <option value="Limpieza">Limpieza Dental</option>
+                                                    <option value="Extracción">Extracción</option>
+                                                    <option value="Ortodoncia">Ortodoncia</option>
+                                                    <option value="Revisión">Revisión</option>
+                                                    <option value="Otro">Otro</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="appointmentNotes" class="form-label">Notas de la Cita</label>
+                                                <textarea class="form-control" id="appointmentNotes" rows="4"></textarea>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="depositRequired" checked>
+                                                <label class="form-check-label" for="depositRequired">
+                                                    Solicitar anticipo de $50 para apartar la cita
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-custom">
+                                        <i class="fas fa-calendar-check me-1"></i> Agendar Cita
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="syncCalendarBtn">
+                                        <i class="fas fa-sync-alt me-1"></i> Sincronizar con Google Calendar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Calendario de Citas</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="calendarView" class="text-center mb-4">
+                                        <!-- Vista de calendario simplificada -->
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <button class="btn btn-outline-primary" id="prevMonthBtn">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </button>
+                                            <h4 id="currentMonth">Agosto 2023</h4>
+                                            <button class="btn btn-outline-primary" id="nextMonthBtn">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                        <div id="calendarDays" class="row">
+                                            <!-- Los días del calendario se cargarán con JavaScript -->
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID Cita</th>
+                                                    <th>Paciente</th>
+                                                    <th>Fecha y Hora</th>
+                                                    <th>Tipo</th>
+                                                    <th>Anticipo</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allAppointmentsTable">
+                                                <!-- Todas las citas se cargarán con JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Patient History Section -->
+                <div id="history" class="content-section" style="display:none;">
+                    <h2 class="mb-4">Historial de Citas</h2>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Seleccionar Paciente</h5>
+                                </div>
+                                <div class="card-body">
+                                    <select class="form-control" id="historyPatientSelect">
+                                        <option value="">Buscar paciente...</option>
+                                    </select>
+                                    <div id="selectedPatientInfo" class="mt-3 p-3 bg-light rounded" style="display:none;">
+                                        <h6 id="patientHistoryName"></h6>
+                                        <p class="mb-1 small" id="patientHistoryContact"></p>
+                                        <p class="mb-0 small" id="patientHistoryLastAppointment"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Historial de Citas</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="patientHistoryList">
+                                        <p class="text-center text-muted mt-3">
+                                            Seleccione un paciente para ver su historial de citas
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Files Section -->
+                <div id="files" class="content-section" style="display:none;">
+                    <h2 class="mb-4">Expedientes y Documentos</h2>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Pacientes</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group" id="patientFilesList">
+                                        <!-- Lista de pacientes para expedientes -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card card-custom">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 id="selectedPatientFiles">Expediente del Paciente</h5>
+                                    <button class="btn btn-custom btn-sm" id="uploadFileBtn">
+                                        <i class="fas fa-upload me-1"></i> Subir Archivo
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="file-upload mb-4" id="fileUploadArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <p>Arrastra y suelta archivos aquí o haz clic para seleccionar</p>
+                                        <p class="small text-muted">Formatos permitidos: PDF, JPG, PNG, DOC (Máx. 10MB)</p>
+                                        <input type="file" id="fileInput" multiple style="display:none;">
+                                    </div>
+                                    
+                                    <div id="attachmentsList">
+                                        <p class="text-center text-muted">
+                                            Seleccione un paciente para ver sus archivos adjuntos
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Google Calendar Section -->
+                <div id="calendar" class="content-section" style="display:none;">
+                    <h2 class="mb-4">Integración con Google Calendar</h2>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5><i class="fab fa-google me-2"></i> Sincronización con Google Calendar</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Esta funcionalidad permite sincronizar automáticamente todas las citas con Google Calendar.</p>
+                                    
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle me-2"></i>Características de la integración:</h6>
+                                        <ul class="mb-0">
+                                            <li>Cada cita creada en el sistema se agrega automáticamente a Google Calendar</li>
+                                            <li>Las modificaciones o cancelaciones se reflejan en tiempo real</li>
+                                            <li>Recordatorios automáticos a pacientes vía email/SMS</li>
+                                            <li>Sincronización bidireccional: cambios en Google Calendar se reflejan en el CRM</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <h6>Estado de la conexión:</h6>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <span id="connectionStatus" class="badge bg-success">Conectado</span>
+                                            </div>
+                                            <button class="btn btn-outline-primary btn-sm me-2">
+                                                <i class="fas fa-sync-alt me-1"></i> Sincronizar Ahora
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-sm">
+                                                <i class="fas fa-cog me-1"></i> Configurar Sincronización
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Citas Recientemente Sincronizadas</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recentSyncs">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <h6 class="mb-0">Dra. Pérez - Consulta</h6>
+                                                <small class="text-muted">Hoy, 10:00 AM</small>
+                                            </div>
+                                            <span class="badge bg-success">Sincronizado</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <h6 class="mb-0">Juan López - Limpieza</h6>
+                                                <small class="text-muted">Hoy, 2:30 PM</small>
+                                            </div>
+                                            <span class="badge bg-success">Sincronizado</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">María González - Revisión</h6>
+                                                <small class="text-muted">Mañana, 11:00 AM</small>
+                                            </div>
+                                            <span class="badge bg-warning">Pendiente</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5>Próximas Citas en Google Calendar</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Evento en Calendar</th>
+                                                    <th>Fecha y Hora</th>
+                                                    <th>Paciente</th>
+                                                    <th>Estado Sincronización</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Consulta: Dra. Pérez</td>
+                                                    <td>15 Ago 2023, 10:00 AM</td>
+                                                    <td>Ana García</td>
+                                                    <td><span class="badge bg-success">Sincronizado</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Limpieza Dental: Juan López</td>
+                                                    <td>15 Ago 2023, 2:30 PM</td>
+                                                    <td>Juan López</td>
+                                                    <td><span class="badge bg-success">Sincronizado</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Revisón: María González</td>
+                                                    <td>16 Ago 2023, 11:00 AM</td>
+                                                    <td>María González</td>
+                                                    <td><span class="badge bg-warning">Pendiente</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Section -->
+                <div id="settings" class="content-section" style="display:none;">
+                    <h2 class="mb-4">Configuración</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-money-bill-wave me-2"></i> Configuración de Pagos</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form>
+                                        <div class="mb-3">
+                                            <label for="depositAmount" class="form-label">Monto del Anticipo</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" id="depositAmount" value="50">
+                                            </div>
+                                            <div class="form-text">Cantidad que se cobra para apartar una cita.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="paymentMethods" class="form-label">Métodos de Pago Aceptados</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="cashPayment" checked>
+                                                <label class="form-check-label" for="cashPayment">Efectivo</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="cardPayment" checked>
+                                                <label class="form-check-label" for="cardPayment">Tarjeta de Crédito/Débito</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="transferPayment">
+                                                <label class="form-check-label" for="transferPayment">Transferencia Bancaria</label>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-custom">Guardar Configuración</button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <div class="card card-custom mt-4">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-bell me-2"></i> Notificaciones</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Recordatorios de Citas</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="emailReminders" checked>
+                                            <label class="form-check-label" for="emailReminders">Enviar recordatorios por email</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="smsReminders">
+                                            <label class="form-check-label" for="smsReminders">Enviar recordatorios por SMS</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="reminderTime" class="form-label">Tiempo de Recordatorio</label>
+                                        <select class="form-control" id="reminderTime">
+                                            <option value="1">1 día antes</option>
+                                            <option value="2" selected>2 días antes</option>
+                                            <option value="3">3 días antes</option>
+                                            <option value="7">1 semana antes</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-custom">Guardar Configuración</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card card-custom">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-calendar-alt me-2"></i> Horario de Consulta</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Establece tu horario de atención para que los pacientes puedan agendar citas dentro de estos horarios.</p>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Día</th>
+                                                    <th>Horario de Apertura</th>
+                                                    <th>Horario de Cierre</th>
+                                                    <th>Activo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Lunes</td>
+                                                    <td><input type="time" class="form-control" value="09:00"></td>
+                                                    <td><input type="time" class="form-control" value="18:00"></td>
+                                                    <td><input type="checkbox" checked></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Martes</td>
+                                                    <td><input type="time" class="form-control" value="09:00"></td>
+                                                    <td><input type="time" class="form-control" value="18:00"></td>
+                                                    <td><input type="checkbox" checked></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Miércoles</td>
+                                                    <td><input type="time" class="form-control" value="09:00"></td>
+                                                    <td><input type="time" class="form-control" value="18:00"></td>
+                                                    <td><input type="checkbox" checked></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Jueves</td>
+                                                    <td><input type="time" class="form-control" value="09:00"></td>
+                                                    <td><input type="time" class="form-control" value="18:00"></td>
+                                                    <td><input type="checkbox" checked></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Viernes</td>
+                                                    <td><input type="time" class="form-control" value="09:00"></td>
+                                                    <td><input type="time" class="form-control" value="17:00"></td>
+                                                    <td><input type="checkbox" checked></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Sábado</td>
+                                                    <td><input type="time" class="form-control" value="10:00"></td>
+                                                    <td><input type="time" class="form-control" value="14:00"></td>
+                                                    <td><input type="checkbox"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button type="submit" class="btn btn-custom">Guardar Horario</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Appointment Details -->
+    <div class="modal fade" id="appointmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles de la Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="appointmentModalContent">
+                        <!-- Los detalles de la cita se cargarán con JavaScript -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="confirmAppointmentBtn">Confirmar Cita</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Payment -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Pago de Anticipo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Por favor, registra el pago del anticipo de <strong>$50</strong> para confirmar la cita.</p>
+                    <div class="mb-3">
+                        <label for="paymentMethod" class="form-label">Método de Pago</label>
+                        <select class="form-control" id="paymentMethod">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
+                            <option value="Transferencia">Transferencia Bancaria</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paymentNotes" class="form-label">Notas del Pago (opcional)</label>
+                        <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="registerPaymentBtn">Registrar Pago</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Demo de CRM Médico &copy; 2023 - Sistema de gestión para doctores y dentistas</p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Datos iniciales de ejemplo
+        let patients = [
+            { id: 1, name: "Ana García", phone: "555-1234", email: "ana@example.com", birthdate: "1985-05-15", address: "Calle Principal 123", notes: "Alergia a la penicilina", registrationDate: "2023-06-10" },
+            { id: 2, name: "Juan López", phone: "555-5678", email: "juan@example.com", birthdate: "1990-08-22", address: "Avenida Central 456", notes: "Historial de hipertensión", registrationDate: "2023-07-05" },
+            { id: 3, name: "María González", phone: "555-9012", email: "maria@example.com", birthdate: "1978-12-03", address: "Boulevard Norte 789", notes: "Diabetes tipo 2", registrationDate: "2023-07-20" },
+            { id: 4, name: "Carlos Rodríguez", phone: "555-3456", email: "carlos@example.com", birthdate: "1995-02-28", address: "Plaza Sur 101", notes: "Ninguna", registrationDate: "2023-08-01" }
+        ];
+        
+        let appointments = [
+            { id: 1, patientId: 1, patientName: "Ana García", date: "2023-08-15", time: "10:00", type: "Consulta", notes: "Dolor de muelas", deposit: true, depositPaid: true, status: "confirmada", googleCalendarSync: true },
+            { id: 2, patientId: 2, patientName: "Juan López", date: "2023-08-15", time: "14:30", type: "Limpieza", notes: "Limpieza dental regular", deposit: true, depositPaid: true, status: "confirmada", googleCalendarSync: true },
+            { id: 3, patientId: 3, patientName: "María González", date: "2023-08-16", time: "11:00", type: "Revisión", notes: "Revisión de ortodoncia", deposit: true, depositPaid: false, status: "pendiente", googleCalendarSync: false },
+            { id: 4, patientId: 4, patientName: "Carlos Rodríguez", date: "2023-08-17", time: "16:00", type: "Extracción", notes: "Extracción de muela del juicio", deposit: true, depositPaid: true, status: "confirmada", googleCalendarSync: true },
+            { id: 5, patientId: 1, patientName: "Ana García", date: "2023-08-10", time: "09:30", type: "Consulta", notes: "Seguimiento de tratamiento", deposit: true, depositPaid: true, status: "completada", googleCalendarSync: true },
+            { id: 6, patientId: 2, patientName: "Juan López", date: "2023-08-05", time: "15:00", type: "Limpieza", notes: "Primera limpieza del año", deposit: true, depositPaid: true, status: "completada", googleCalendarSync: true }
+        ];
+        
+        let files = [
+            { id: 1, patientId: 1, fileName: "Historial Médico.pdf", fileType: "pdf", uploadDate: "2023-07-15", size: "2.4 MB" },
+            { id: 2, patientId: 1, fileName: "Radiografía.jpg", fileType: "jpg", uploadDate: "2023-07-20", size: "1.8 MB" },
+            { id: 3, patientId: 2, fileName: "Análisis de Sangre.pdf", fileType: "pdf", uploadDate: "2023-08-01", size: "3.1 MB" },
+            { id: 4, patientId: 3, fileName: "Prescripción Médica.pdf", fileType: "pdf", uploadDate: "2023-07-25", size: "0.8 MB" }
+        ];
+        
+        // Variables globales
+        let currentPatientId = null;
+        let currentMonth = 7; // Agosto (0-indexed)
+        let currentYear = 2023;
+        
+        // Inicialización cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar datos iniciales
+            loadDashboardData();
+            loadPatientsTable();
+            loadAppointmentsTable();
+            populatePatientSelects();
+            loadCalendarView();
+            loadPatientFilesList();
+            
+            // Configurar navegación del sidebar
+            setupNavigation();
+            
+            // Configurar formularios
+            setupForms();
+            
+            // Configurar eventos de botones
+            setupEventListeners();
+            
+            // Inicializar gráficas
+            initCharts();
+        });
+        
+        // Configurar navegación entre secciones
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.sidebar a');
+            const contentSections = document.querySelectorAll('.content-section');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remover clase active de todos los enlaces
+                    navLinks.forEach(item => item.classList.remove('active'));
+                    
+                    // Agregar clase active al enlace clickeado
+                    this.classList.add('active');
+                    
+                    // Ocultar todas las secciones
+                    contentSections.forEach(section => section.style.display = 'none');
+                    
+                    // Mostrar la sección correspondiente
+                    const sectionId = this.getAttribute('data-section');
+                    document.getElementById(sectionId).style.display = 'block';
+                    
+                    // Actualizar datos si es necesario
+                    if (sectionId === 'dashboard') {
+                        loadDashboardData();
+                        initCharts();
+                    } else if (sectionId === 'patients') {
+                        loadPatientsTable();
+                    } else if (sectionId === 'appointments') {
+                        loadAppointmentsTable();
+                    } else if (sectionId === 'history') {
+                        // Cargar datos de historial
+                    }
+                });
+            });
+        }
+        
+        // Cargar datos del dashboard
+        function loadDashboardData() {
+            // Calcular estadísticas
+            const totalPatients = patients.length;
+            const today = new Date().toISOString().split('T')[0];
+            const todayAppointments = appointments.filter(a => a.date === today && a.status !== 'cancelada').length;
+            const totalDeposits = appointments.filter(a => a.depositPaid).length * 50;
+            const monthRevenue = appointments.filter(a => {
+                const appointmentDate = new Date(a.date);
+                return appointmentDate.getMonth() === currentMonth && 
+                       appointmentDate.getFullYear() === currentYear && 
+                       a.status === 'completada';
+            }).length * 250; // Suponiendo $250 por cita completada
+            
+            // Actualizar estadísticas en la UI
+            document.getElementById('total-patients').textContent = totalPatients;
+            document.getElementById('today-appointments').textContent = todayAppointments;
+            document.getElementById('total-deposits').textContent = `$${totalDeposits}`;
+            document.getElementById('month-revenue').textContent = `$${monthRevenue}`;
+            
+            // Cargar tabla de próximas citas
+            loadAppointmentsTable();
+        }
+        
+        // Cargar tabla de pacientes
+        function loadPatientsTable() {
+            const tableBody = document.getElementById('patientsTable');
+            tableBody.innerHTML = '';
+            
+            patients.forEach(patient => {
+                // Obtener última cita del paciente
+                const patientAppointments = appointments.filter(a => a.patientId === patient.id);
+                const lastAppointment = patientAppointments.length > 0 
+                    ? patientAppointments.sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+                    : null;
+                
+                const lastAppointmentText = lastAppointment 
+                    ? `${lastAppointment.date} (${lastAppointment.type})`
+                    : 'Sin citas';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${patient.id}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="patient-avatar me-3">${patient.name.charAt(0)}</div>
+                            <div>
+                                <h6 class="mb-0">${patient.name}</h6>
+                                <small class="text-muted">Registrado: ${patient.registrationDate}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>${patient.phone}</div>
+                        <small class="text-muted">${patient.email}</small>
+                    </td>
+                    <td>${lastAppointmentText}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1 view-patient" data-id="${patient.id}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success me-1 schedule-patient" data-id="${patient.id}">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-patient" data-id="${patient.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Agregar event listeners a los botones
+            document.querySelectorAll('.view-patient').forEach(button => {
+                button.addEventListener('click', function() {
+                    const patientId = parseInt(this.getAttribute('data-id'));
+                    viewPatientDetails(patientId);
+                });
+            });
+            
+            document.querySelectorAll('.schedule-patient').forEach(button => {
+                button.addEventListener('click', function() {
+                    const patientId = parseInt(this.getAttribute('data-id'));
+                    scheduleForPatient(patientId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-patient').forEach(button => {
+                button.addEventListener('click', function() {
+                    const patientId = parseInt(this.getAttribute('data-id'));
+                    deletePatient(patientId);
+                });
+            });
+        }
+        
+        // Cargar tabla de citas
+        function loadAppointmentsTable() {
+            const tableBody = document.getElementById('appointmentsTable');
+            const allAppointmentsBody = document.getElementById('allAppointmentsTable');
+            
+            // Limpiar tablas
+            tableBody.innerHTML = '';
+            allAppointmentsBody.innerHTML = '';
+            
+            // Ordenar citas por fecha (más recientes primero)
+            const sortedAppointments = [...appointments].sort((a, b) => {
+                return new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time);
+            });
+            
+            // Filtrar citas para hoy y futuras
+            const today = new Date().toISOString().split('T')[0];
+            const upcomingAppointments = sortedAppointments.filter(a => a.date >= today && a.status !== 'cancelada');
+            
+            // Mostrar próximas citas en el dashboard
+            upcomingAppointments.slice(0, 5).forEach(appointment => {
+                const row = document.createElement('tr');
+                row.innerHTML = createAppointmentRow(appointment);
+                tableBody.appendChild(row);
+            });
+            
+            // Mostrar todas las citas en la sección de citas
+            sortedAppointments.forEach(appointment => {
+                const row = document.createElement('tr');
+                row.innerHTML = createAppointmentRow(appointment);
+                allAppointmentsBody.appendChild(row);
+            });
+            
+            // Agregar event listeners a los botones
+            addAppointmentEventListeners();
+        }
+        
+        // Crear una fila de cita
+        function createAppointmentRow(appointment) {
+            // Formatear fecha y hora
+            const dateObj = new Date(appointment.date);
+            const formattedDate = dateObj.toLocaleDateString('es-ES', { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            // Determinar clase de estado
+            let statusClass = '';
+            if (appointment.status === 'confirmada') statusClass = 'appointment-confirmed';
+            else if (appointment.status === 'pendiente') statusClass = 'appointment-pending';
+            else if (appointment.status === 'cancelada') statusClass = 'appointment-cancelled';
+            else if (appointment.status === 'completada') statusClass = 'appointment-confirmed';
+            
+            // Determinar texto de estado
+            let statusText = appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1);
+            
+            // Determinar si el anticipo fue pagado
+            const depositText = appointment.deposit 
+                ? (appointment.depositPaid 
+                    ? '<span class="deposit-badge"><i class="fas fa-check me-1"></i>Pagado</span>' 
+                    : '<span class="badge bg-warning">Pendiente</span>')
+                : '<span class="badge bg-secondary">No requerido</span>';
+            
+            return `
+                <td>${appointment.patientName}</td>
+                <td>${formattedDate} a las ${appointment.time}</td>
+                <td>${appointment.type}</td>
+                <td>${depositText}</td>
+                <td><span class="appointment-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-1 view-appointment" data-id="${appointment.id}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${appointment.status === 'pendiente' ? `
+                        <button class="btn btn-sm btn-outline-success me-1 confirm-appointment" data-id="${appointment.id}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger cancel-appointment" data-id="${appointment.id}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    ` : ''}
+                    ${appointment.status === 'confirmada' && !appointment.depositPaid ? `
+                        <button class="btn btn-sm btn-outline-warning register-payment" data-id="${appointment.id}">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            `;
+        }
+        
+        // Agregar event listeners a los botones de citas
+        function addAppointmentEventListeners() {
+            // Botón para ver detalles de cita
+            document.querySelectorAll('.view-appointment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const appointmentId = parseInt(this.getAttribute('data-id'));
+                    viewAppointmentDetails(appointmentId);
+                });
+            });
+            
+            // Botón para confirmar cita
+            document.querySelectorAll('.confirm-appointment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const appointmentId = parseInt(this.getAttribute('data-id'));
+                    confirmAppointment(appointmentId);
+                });
+            });
+            
+            // Botón para cancelar cita
+            document.querySelectorAll('.cancel-appointment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const appointmentId = parseInt(this.getAttribute('data-id'));
+                    cancelAppointment(appointmentId);
+                });
+            });
+            
+            // Botón para registrar pago
+            document.querySelectorAll('.register-payment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const appointmentId = parseInt(this.getAttribute('data-id'));
+                    openPaymentModal(appointmentId);
+                });
+            });
+        }
+        
+        // Ver detalles de una cita
+        function viewAppointmentDetails(appointmentId) {
+            const appointment = appointments.find(a => a.id === appointmentId);
+            if (!appointment) return;
+            
+            const patient = patients.find(p => p.id === appointment.patientId);
+            
+            const modalContent = document.getElementById('appointmentModalContent');
+            modalContent.innerHTML = `
+                <div class="mb-3">
+                    <h6>Paciente:</h6>
+                    <p>${appointment.patientName}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Fecha y Hora:</h6>
+                    <p>${appointment.date} a las ${appointment.time}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Tipo de Cita:</h6>
+                    <p>${appointment.type}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Notas:</h6>
+                    <p>${appointment.notes || 'Sin notas'}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Anticipo:</h6>
+                    <p>${appointment.deposit ? (appointment.depositPaid ? 'Pagado ($50)' : 'Pendiente de pago ($50)') : 'No requerido'}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Estado:</h6>
+                    <p>${appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}</p>
+                </div>
+                ${patient ? `
+                <div class="mb-3">
+                    <h6>Información del Paciente:</h6>
+                    <p>Teléfono: ${patient.phone}</p>
+                    <p>Email: ${patient.email}</p>
+                    <p>Notas médicas: ${patient.notes}</p>
+                </div>
+                ` : ''}
+            `;
+            
+            // Mostrar modal
+            const appointmentModal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+            appointmentModal.show();
+        }
+        
+        // Confirmar una cita
+        function confirmAppointment(appointmentId) {
+            const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+            if (appointmentIndex === -1) return;
+            
+            appointments[appointmentIndex].status = 'confirmada';
+            
+            // Si la cita requiere anticipo, abrir modal de pago
+            if (appointments[appointmentIndex].deposit && !appointments[appointmentIndex].depositPaid) {
+                openPaymentModal(appointmentId);
+            } else {
+                // Recargar datos
+                loadDashboardData();
+                loadAppointmentsTable();
+                showAlert('Cita confirmada exitosamente', 'success');
+            }
+        }
+        
+        // Cancelar una cita
+        function cancelAppointment(appointmentId) {
+            if (confirm('¿Está seguro de que desea cancelar esta cita?')) {
+                const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+                if (appointmentIndex === -1) return;
+                
+                appointments[appointmentIndex].status = 'cancelada';
+                
+                // Recargar datos
+                loadDashboardData();
+                loadAppointmentsTable();
+                showAlert('Cita cancelada exitosamente', 'warning');
+            }
+        }
+        
+        // Abrir modal de pago
+        function openPaymentModal(appointmentId) {
+            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            
+            // Configurar botón de registrar pago
+            document.getElementById('registerPaymentBtn').onclick = function() {
+                const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+                if (appointmentIndex === -1) return;
+                
+                appointments[appointmentIndex].depositPaid = true;
+                appointments[appointmentIndex].status = 'confirmada';
+                
+                // Recargar datos
+                loadDashboardData();
+                loadAppointmentsTable();
+                
+                // Cerrar modal
+                paymentModal.hide();
+                
+                showAlert('Pago registrado exitosamente. Cita confirmada.', 'success');
+            };
+            
+            paymentModal.show();
+        }
+        
+        // Ver detalles de un paciente
+        function viewPatientDetails(patientId) {
+            const patient = patients.find(p => p.id === patientId);
+            if (!patient) return;
+            
+            // Redirigir a la sección de historial y cargar datos del paciente
+            document.querySelector('.sidebar a[data-section="history"]').click();
+            
+            // Seleccionar al paciente en el dropdown
+            document.getElementById('historyPatientSelect').value = patientId;
+            
+            // Cargar información del paciente
+            document.getElementById('patientHistoryName').textContent = patient.name;
+            document.getElementById('patientHistoryContact').textContent = `Tel: ${patient.phone} | Email: ${patient.email}`;
+            
+            // Obtener última cita
+            const patientAppointments = appointments.filter(a => a.patientId === patient.id);
+            const lastAppointment = patientAppointments.length > 0 
+                ? patientAppointments.sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+                : null;
+            
+            document.getElementById('patientHistoryLastAppointment').textContent = lastAppointment 
+                ? `Última cita: ${lastAppointment.date} (${lastAppointment.type})`
+                : 'Sin citas registradas';
+            
+            document.getElementById('selectedPatientInfo').style.display = 'block';
+            
+            // Cargar historial de citas del paciente
+            loadPatientHistory(patientId);
+        }
+        
+        // Agendar cita para un paciente específico
+        function scheduleForPatient(patientId) {
+            // Redirigir a la sección de citas
+            document.querySelector('.sidebar a[data-section="appointments"]').click();
+            
+            // Seleccionar al paciente en el formulario
+            document.getElementById('appointmentPatient').value = patientId;
+            
+            // Establecer fecha para hoy
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('appointmentDate').value = today;
+        }
+        
+        // Eliminar un paciente
+        function deletePatient(patientId) {
+            if (confirm('¿Está seguro de que desea eliminar este paciente? Esta acción no se puede deshacer.')) {
+                // Verificar si el paciente tiene citas futuras
+                const patientAppointments = appointments.filter(a => a.patientId === patientId && a.status !== 'completada' && a.status !== 'cancelada');
+                
+                if (patientAppointments.length > 0) {
+                    alert('No se puede eliminar el paciente porque tiene citas pendientes. Por favor, cancele las citas primero.');
+                    return;
+                }
+                
+                // Eliminar paciente
+                patients = patients.filter(p => p.id !== patientId);
+                
+                // Eliminar archivos del paciente
+                files = files.filter(f => f.patientId !== patientId);
+                
+                // Recargar datos
+                loadDashboardData();
+                loadPatientsTable();
+                populatePatientSelects();
+                loadPatientFilesList();
+                
+                showAlert('Paciente eliminado exitosamente', 'danger');
+            }
+        }
+        
+        // Cargar historial de citas de un paciente
+        function loadPatientHistory(patientId) {
+            const patientAppointments = appointments.filter(a => a.patientId === patientId);
+            const historyList = document.getElementById('patientHistoryList');
+            
+            if (patientAppointments.length === 0) {
+                historyList.innerHTML = '<p class="text-center text-muted">No hay citas registradas para este paciente.</p>';
+                return;
+            }
+            
+            // Ordenar citas por fecha (más recientes primero)
+            patientAppointments.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            let historyHTML = '';
+            patientAppointments.forEach(appointment => {
+                // Formatear fecha
+                const dateObj = new Date(appointment.date);
+                const formattedDate = dateObj.toLocaleDateString('es-ES', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                // Determinar clase de estado
+                let statusClass = '';
+                if (appointment.status === 'confirmada') statusClass = 'appointment-confirmed';
+                else if (appointment.status === 'pendiente') statusClass = 'appointment-pending';
+                else if (appointment.status === 'cancelada') statusClass = 'appointment-cancelled';
+                else if (appointment.status === 'completada') statusClass = 'appointment-confirmed';
+                
+                historyHTML += `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">${appointment.type}</h6>
+                                    <p class="mb-1">${formattedDate} a las ${appointment.time}</p>
+                                    <p class="mb-2 text-muted small">${appointment.notes || 'Sin notas'}</p>
+                                    <span class="appointment-badge ${statusClass}">
+                                        ${appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                                    </span>
+                                    ${appointment.depositPaid ? '<span class="badge bg-success ms-2">Anticipo pagado</span>' : ''}
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary view-appointment" data-id="${appointment.id}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyList.innerHTML = historyHTML;
+            
+            // Agregar event listeners a los botones de ver cita
+            document.querySelectorAll('#patientHistoryList .view-appointment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const appointmentId = parseInt(this.getAttribute('data-id'));
+                    viewAppointmentDetails(appointmentId);
+                });
+            });
+        }
+        
+        // Llenar los selectores de pacientes
+        function populatePatientSelects() {
+            const patientSelects = [
+                document.getElementById('appointmentPatient'),
+                document.getElementById('historyPatientSelect')
+            ];
+            
+            patientSelects.forEach(select => {
+                if (!select) return;
+                
+                // Limpiar opciones excepto la primera
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+                
+                // Agregar opciones para cada paciente
+                patients.forEach(patient => {
+                    const option = document.createElement('option');
+                    option.value = patient.id;
+                    option.textContent = `${patient.name} (${patient.phone})`;
+                    select.appendChild(option);
+                });
+            });
+            
+            // Configurar evento para el selector de historial
+            const historySelect = document.getElementById('historyPatientSelect');
+            if (historySelect) {
+                historySelect.addEventListener('change', function() {
+                    const patientId = parseInt(this.value);
+                    if (patientId) {
+                        viewPatientDetails(patientId);
+                    } else {
+                        document.getElementById('selectedPatientInfo').style.display = 'none';
+                        document.getElementById('patientHistoryList').innerHTML = 
+                            '<p class="text-center text-muted">Seleccione un paciente para ver su historial de citas</p>';
+                    }
+                });
+            }
+        }
+        
+        // Configurar formularios
+        function setupForms() {
+            // Formulario de paciente
+            document.getElementById('patientForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Obtener valores del formulario
+                const newPatient = {
+                    id: patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1,
+                    name: document.getElementById('patientName').value,
+                    phone: document.getElementById('patientPhone').value,
+                    email: document.getElementById('patientEmail').value,
+                    birthdate: document.getElementById('patientBirthdate').value,
+                    address: document.getElementById('patientAddress').value,
+                    notes: document.getElementById('patientNotes').value,
+                    registrationDate: new Date().toISOString().split('T')[0]
+                };
+                
+                // Agregar paciente a la lista
+                patients.push(newPatient);
+                
+                // Limpiar formulario
+                this.reset();
+                
+                // Recargar datos
+                loadDashboardData();
+                loadPatientsTable();
+                populatePatientSelects();
+                
+                showAlert('Paciente registrado exitosamente', 'success');
+            });
+            
+            // Formulario de cita
+            document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Obtener valores del formulario
+                const patientId = parseInt(document.getElementById('appointmentPatient').value);
+                const patient = patients.find(p => p.id === patientId);
+                
+                if (!patient) {
+                    alert('Por favor, seleccione un paciente válido.');
+                    return;
+                }
+                
+                const newAppointment = {
+                    id: appointments.length > 0 ? Math.max(...appointments.map(a => a.id)) + 1 : 1,
+                    patientId: patientId,
+                    patientName: patient.name,
+                    date: document.getElementById('appointmentDate').value,
+                    time: document.getElementById('appointmentTime').value,
+                    type: document.getElementById('appointmentType').value,
+                    notes: document.getElementById('appointmentNotes').value,
+                    deposit: document.getElementById('depositRequired').checked,
+                    depositPaid: false,
+                    status: 'pendiente',
+                    googleCalendarSync: false
+                };
+                
+                // Agregar cita a la lista
+                appointments.push(newAppointment);
+                
+                // Limpiar formulario
+                document.getElementById('appointmentDate').value = '';
+                document.getElementById('appointmentTime').value = '';
+                document.getElementById('appointmentType').value = '';
+                document.getElementById('appointmentNotes').value = '';
+                
+                // Recargar datos
+                loadDashboardData();
+                loadAppointmentsTable();
+                
+                showAlert('Cita agendada exitosamente', 'success');
+                
+                // Si requiere anticipo, abrir modal de pago
+                if (newAppointment.deposit) {
+                    setTimeout(() => {
+                        openPaymentModal(newAppointment.id);
+                    }, 500);
+                }
+            });
+        }
+        
+        // Configurar event listeners adicionales
+        function setupEventListeners() {
+            // Botón para nueva cita en el dashboard
+            document.getElementById('newAppointmentBtn').addEventListener('click', function() {
+                document.querySelector('.sidebar a[data-section="appointments"]').click();
+            });
+            
+            // Botón para sincronizar con Google Calendar
+            document.getElementById('syncCalendarBtn').addEventListener('click', function() {
+                // Simular sincronización
+                const pendingAppointments = appointments.filter(a => !a.googleCalendarSync && a.status !== 'cancelada');
+                
+                if (pendingAppointments.length === 0) {
+                    showAlert('No hay citas pendientes por sincronizar', 'info');
+                    return;
+                }
+                
+                // Marcar como sincronizadas
+                pendingAppointments.forEach(appointment => {
+                    appointment.googleCalendarSync = true;
+                });
+                
+                showAlert(`${pendingAppointments.length} citas sincronizadas con Google Calendar`, 'success');
+                
+                // Recargar datos
+                loadAppointmentsTable();
+            });
+            
+            // Botón para subir archivo
+            document.getElementById('uploadFileBtn').addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
+            
+            // Área para subir archivos
+            document.getElementById('fileUploadArea').addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
+            
+            // Input de archivo
+            document.getElementById('fileInput').addEventListener('change', function() {
+                if (this.files.length > 0 && currentPatientId) {
+                    uploadFiles(this.files);
+                } else if (!currentPatientId) {
+                    alert('Por favor, seleccione un paciente primero.');
+                }
+            });
+            
+            // Navegación del calendario
+            document.getElementById('prevMonthBtn').addEventListener('click', function() {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                loadCalendarView();
+            });
+            
+            document.getElementById('nextMonthBtn').addEventListener('click', function() {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                loadCalendarView();
+            });
+        }
+        
+        // Cargar vista del calendario
+        function loadCalendarView() {
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                              "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            
+            // Actualizar título del mes
+            document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            // Obtener primer día del mes y cantidad de días
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            // Obtener día de la semana del primer día (0 = Domingo, 1 = Lunes, etc.)
+            let firstDayIndex = firstDay.getDay();
+            // Ajustar para que la semana empiece en Lunes (1)
+            firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+            
+            // Generar días del calendario
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            // Días en blanco al inicio
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'col p-2';
+                calendarDays.appendChild(emptyDay);
+            }
+            
+            // Días del mes
+            const today = new Date();
+            const isToday = (day) => {
+                return day === today.getDate() && 
+                       currentMonth === today.getMonth() && 
+                       currentYear === today.getFullYear();
+            };
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'col p-2';
+                
+                // Verificar si hay citas este día
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayAppointments = appointments.filter(a => a.date === dateStr && a.status !== 'cancelada');
+                
+                let dayContent = `
+                    <div class="calendar-day ${isToday(day) ? 'bg-primary text-white rounded' : ''} p-2" style="min-height: 80px; cursor: pointer;">
+                        <div class="d-flex justify-content-between">
+                            <strong>${day}</strong>
+                `;
+                
+                if (dayAppointments.length > 0) {
+                    dayContent += `<span class="badge bg-danger">${dayAppointments.length}</span>`;
+                }
+                
+                dayContent += `</div>`;
+                
+                // Mostrar citas del día (máximo 2)
+                if (dayAppointments.length > 0) {
+                    dayAppointments.slice(0, 2).forEach(appointment => {
+                        let badgeClass = 'bg-success';
+                        if (appointment.status === 'pendiente') badgeClass = 'bg-warning';
+                        else if (appointment.status === 'cancelada') badgeClass = 'bg-secondary';
+                        
+                        dayContent += `
+                            <div class="mt-1">
+                                <small class="d-block text-truncate ${isToday(day) ? 'text-white' : 'text-muted'}">
+                                    <span class="badge ${badgeClass} me-1">${appointment.time}</span>
+                                    ${appointment.patientName.split(' ')[0]}
+                                </small>
+                            </div>
+                        `;
+                    });
+                    
+                    if (dayAppointments.length > 2) {
+                        dayContent += `<small class="text-muted">+${dayAppointments.length - 2} más</small>`;
+                    }
+                }
+                
+                dayContent += `</div>`;
+                dayElement.innerHTML = dayContent;
+                
+                // Agregar evento click al día
+                dayElement.querySelector('.calendar-day').addEventListener('click', function() {
+                    // Redirigir a la sección de citas
+                    document.querySelector('.sidebar a[data-section="appointments"]').click();
+                    
+                    // Establecer la fecha en el formulario de citas
+                    document.getElementById('appointmentDate').value = dateStr;
+                });
+                
+                calendarDays.appendChild(dayElement);
+            }
+        }
+        
+        // Cargar lista de pacientes para archivos
+        function loadPatientFilesList() {
+            const patientFilesList = document.getElementById('patientFilesList');
+            patientFilesList.innerHTML = '';
+            
+            patients.forEach(patient => {
+                const patientFiles = files.filter(f => f.patientId === patient.id);
+                const fileCount = patientFiles.length;
+                
+                const patientItem = document.createElement('a');
+                patientItem.href = '#';
+                patientItem.className = 'list-group-item list-group-item-action';
+                patientItem.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${patient.name}</h6>
+                        <small>${fileCount} archivo${fileCount !== 1 ? 's' : ''}</small>
+                    </div>
+                    <p class="mb-1 small">${patient.phone}</p>
+                `;
+                
+                patientItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remover clase active de todos los items
+                    document.querySelectorAll('#patientFilesList a').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // Agregar clase active al item clickeado
+                    this.classList.add('active');
+                    
+                    // Establecer paciente actual
+                    currentPatientId = patient.id;
+                    
+                    // Actualizar título
+                    document.getElementById('selectedPatientFiles').textContent = `Expediente de ${patient.name}`;
+                    
+                    // Cargar archivos del paciente
+                    loadPatientFiles(patient.id);
+                });
+                
+                patientFilesList.appendChild(patientItem);
+            });
+            
+            // Seleccionar el primer paciente por defecto
+            if (patients.length > 0) {
+                patientFilesList.firstChild.click();
+            }
+        }
+        
+        // Cargar archivos de un paciente
+        function loadPatientFiles(patientId) {
+            const patientFiles = files.filter(f => f.patientId === patientId);
+            const attachmentsList = document.getElementById('attachmentsList');
+            
+            if (patientFiles.length === 0) {
+                attachmentsList.innerHTML = '<p class="text-center text-muted">No hay archivos adjuntos para este paciente.</p>';
+                return;
+            }
+            
+            let filesHTML = '';
+            patientFiles.forEach(file => {
+                let fileIcon = 'fa-file';
+                if (file.fileType === 'pdf') fileIcon = 'fa-file-pdf';
+                else if (file.fileType === 'jpg' || file.fileType === 'png') fileIcon = 'fa-file-image';
+                
+                filesHTML += `
+                    <div class="attachment-item">
+                        <div>
+                            <i class="fas ${fileIcon} me-2 text-primary"></i>
+                            <span>${file.fileName}</span>
+                            <small class="text-muted ms-2">${file.size}</small>
+                        </div>
+                        <div>
+                            <small class="text-muted me-3">${file.uploadDate}</small>
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger ms-1 delete-file" data-id="${file.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            attachmentsList.innerHTML = filesHTML;
+            
+            // Agregar event listeners a los botones de eliminar
+            document.querySelectorAll('.delete-file').forEach(button => {
+                button.addEventListener('click', function() {
+                    const fileId = parseInt(this.getAttribute('data-id'));
+                    deleteFile(fileId);
+                });
+            });
+        }
+        
+        // Subir archivos
+        function uploadFiles(fileList) {
+            // Simular subida de archivos
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                const fileExtension = file.name.split('.').pop().toLowerCase();
+                
+                const newFile = {
+                    id: files.length > 0 ? Math.max(...files.map(f => f.id)) + 1 : 1,
+                    patientId: currentPatientId,
+                    fileName: file.name,
+                    fileType: fileExtension,
+                    uploadDate: new Date().toISOString().split('T')[0],
+                    size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                };
+                
+                files.push(newFile);
+            }
+            
+            // Recargar archivos del paciente
+            loadPatientFiles(currentPatientId);
+            loadPatientFilesList();
+            
+            showAlert(`${fileList.length} archivo(s) subido(s) exitosamente`, 'success');
+            
+            // Limpiar input de archivo
+            document.getElementById('fileInput').value = '';
+        }
+        
+        // Eliminar archivo
+        function deleteFile(fileId) {
+            if (confirm('¿Está seguro de que desea eliminar este archivo? Esta acción no se puede deshacer.')) {
+                files = files.filter(f => f.id !== fileId);
+                
+                // Recargar archivos del paciente
+                if (currentPatientId) {
+                    loadPatientFiles(currentPatientId);
+                    loadPatientFilesList();
+                }
+                
+                showAlert('Archivo eliminado exitosamente', 'danger');
+            }
+        }
+        
+        // Inicializar gráficas
+        function initCharts() {
+            // Gráfica de pacientes por mes
+            const patientsCtx = document.getElementById('patientsChart').getContext('2d');
+            
+            // Datos de ejemplo para pacientes por mes
+            const months = ['Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'];
+            const patientCounts = [12, 15, 18, 20, 22, patients.length];
+            
+            new Chart(patientsCtx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Pacientes Registrados',
+                        data: patientCounts,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 5
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfica de tipos de citas
+            const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+            
+            // Contar citas por tipo
+            const appointmentTypes = {};
+            appointments.forEach(appointment => {
+                if (appointment.status !== 'cancelada') {
+                    appointmentTypes[appointment.type] = (appointmentTypes[appointment.type] || 0) + 1;
+                }
+            });
+            
+            const typeLabels = Object.keys(appointmentTypes);
+            const typeData = Object.values(appointmentTypes);
+            const backgroundColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+            
+            new Chart(appointmentsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: typeLabels,
+                    datasets: [{
+                        data: typeData,
+                        backgroundColor: backgroundColors.slice(0, typeLabels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Mostrar alerta
+        function showAlert(message, type) {
+            // Crear elemento de alerta
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insertar alerta al inicio del contenido principal
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(alertDiv, mainContent.firstChild);
+            
+            // Remover alerta después de 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
