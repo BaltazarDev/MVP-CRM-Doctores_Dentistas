@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Médico - Demo Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c7fb8;
+            --secondary: #4CAF50;
+            --dark: #343a40;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f7fa;
+        }
+
+        .sidebar {
+            background-color: var(--primary);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding-left: 30px;
+        }
+
+        .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .card-custom {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+
+        .card-custom:hover {
+            transform: translateY(-3px);
+        }
+
+        .card-patients {
+            border-top: 4px solid #4CAF50;
+        }
+
+        .card-appointments {
+            border-top: 4px solid #2196F3;
+        }
+
+        .card-payments {
+            border-top: 4px solid #FF9800;
+        }
+
+        .card-revenue {
+            border-top: 4px solid #9C27B0;
+        }
+
+        .patient-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .appointment-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .file-upload {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: rgba(44, 127, 184, 0.05);
+        }
+
+        .btn-custom {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-custom:hover {
+            background-color: #1a6490;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="logo"><i class="fas fa-stethoscope me-2"></i> CRM Médico</div>
+                <a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt me-2"></i>
+                    Dashboard</a>
+                <a href="#" data-section="patients"><i class="fas fa-users me-2"></i> Pacientes</a>
+                <a href="#" data-section="appointments"><i class="fas fa-calendar-check me-2"></i> Citas</a>
+                <a href="#" data-section="history"><i class="fas fa-history me-2"></i> Historial</a>
+                <a href="#" data-section="files"><i class="fas fa-folder me-2"></i> Expedientes</a>
+                <a href="#" data-section="calendar"><i class="fas fa-calendar-alt me-2"></i> Google Calendar</a>
+                <a href="#" data-section="settings"><i class="fas fa-cog me-2"></i> Configuración</a>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+
+                <!-- Dashboard -->
+                <div id="dashboard" class="content-section">
+                    <h2 class="mb-4">Dashboard</h2>
+                    <div class="row dashboard-stats">
+                        <div class="col-md-3">
+                            <div class="card card-custom card-patients">
+                                <div class="card-body"><i class="fas fa-users text-success d-block mb-2 fs-2"></i>
+                                    <h5 id="total-patients">0</h5><span class="text-muted">Pacientes</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-custom card-appointments">
+                                <div class="card-body"><i
+                                        class="fas fa-calendar-check text-primary d-block mb-2 fs-2"></i>
+                                    <h5 id="today-appointments">0</h5><span class="text-muted">Citas Hoy</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-custom card-payments">
+                                <div class="card-body"><i
+                                        class="fas fa-money-bill-wave text-warning d-block mb-2 fs-2"></i>
+                                    <h5 id="total-deposits">$0</h5><span class="text-muted">Despositos</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-custom card-revenue">
+                                <div class="card-body"><i class="fas fa-chart-line text-purple d-block mb-2 fs-2"></i>
+                                    <h5 id="month-revenue">$0</h5><span class="text-muted">Ingresos Mes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patients -->
+                <div id="patients" class="content-section" style="display:none;">
+                    <h2>Pacientes</h2>
+                    <div class="card card-custom p-3 mb-3">
+                        <h5>Registrar Nuevo</h5>
+                        <form id="patientForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-2"><input type="text" class="form-control" id="pName"
+                                        placeholder="Nombre completo" required></div>
+                                <div class="col-md-6 mb-2"><input type="text" class="form-control" id="pPhone"
+                                        placeholder="Teléfono" required></div>
+                                <div class="col-md-6 mb-2"><input type="email" class="form-control" id="pEmail"
+                                        placeholder="Email"></div>
+                                <div class="col-md-6 mb-2"><input type="date" class="form-control" id="pDob"></div>
+                                <div class="col-12 mb-2"><textarea class="form-control" id="pAddress"
+                                        placeholder="Dirección"></textarea></div>
+                                <div class="col-12 mb-2"><button type="submit"
+                                        class="btn btn-custom w-100">Guardar</button></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card card-custom">
+                        <div class="card-body">
+                            <table class="table">
+                                <tbody id="patientsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointments -->
+                <div id="appointments" class="content-section" style="display:none;">
+                    <h2>Citas</h2>
+                    <div class="card card-custom p-3 mb-3">
+                        <h5>Agendar Cita</h5>
+                        <form id="appointmentForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-2"><select id="aPatient" class="form-control" required></select>
+                                </div>
+                                <div class="col-md-3 mb-2"><input type="date" id="aDate" class="form-control" required>
+                                </div>
+                                <div class="col-md-3 mb-2"><input type="time" id="aTime" class="form-control" required>
+                                </div>
+                                <div class="col-md-6 mb-2"><select id="aType" class="form-control">
+                                        <option>Consulta</option>
+                                        <option>Limpieza</option>
+                                        <option>Ortodoncia</option>
+                                    </select></div>
+                                <div class="col-md-6 mb-2 d-flex align-items-center"><input type="checkbox"
+                                        id="aDeposit" checked class="me-2"> Requerir Anticipo</div>
+                                <div class="col-12"><button type="submit" class="btn btn-custom w-100">Agendar</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card card-custom">
+                        <div class="card-body">
+                            <table class="table">
+                                <tbody id="appointmentsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Files -->
+                <div id="files" class="content-section" style="display:none;">
+                    <h2>Expedientes</h2>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="list-group" id="patientFilesList"></div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card card-custom p-3">
+                                <h5 id="selectedPatientFiles">Seleccione un paciente</h5>
+                                <div class="file-upload mb-3" id="fileUploadArea">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                                    <p>Clic para subir archivo</p>
+                                </div>
+                                <input type="file" id="fileInput" style="display:none">
+                                <div id="attachmentsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div id="history" class="content-section" style="display:none;">
+                    <h2>Historial</h2>
+                    <select id="historyPatientSelect" class="form-control mb-3"></select>
+                    <div id="patientHistoryList"></div>
+                </div>
+
+                <!-- Calendar API -->
+                <div id="calendar" class="content-section" style="display:none;">
+                    <h2>Integración Google Calendar</h2>
+                    <div class="card card-custom p-4">
+                        <div id="calendarStatus" class="alert alert-secondary">Comprobando estado...</div>
+                        <button class="btn btn-primary mb-3" id="connectCalendarBtn">Conectar con Google</button>
+                        <hr>
+                        <h5>Sincronización</h5>
+                        <p>Envía citas pendientes a tu calendario.</p>
+                        <button class="btn btn-success" id="syncCalendarBtn">Sincronizar Ahora</button>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div id="settings" class="content-section" style="display:none;">
+                    <h2>Configuración</h2>
+                    <div class="card card-custom p-4">
+                        <form id="settingsForm">
+                            <div class="mb-3">
+                                <label>Monto de Anticipo</label>
+                                <input type="number" id="setDeposit" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label>Días Recordatorio</label>
+                                <input type="number" id="setReminder" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" id="setEmail" class="form-check-input">
+                                    <label class="form-check-label">Enviar Email</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-custom">Guardar Cambios</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="paymentModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Pago Anticipo</h5><button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Registrar pago de $50?</p>
+                </div>
+                <div class="modal-footer"><button class="btn btn-success" id="registerPaymentBtn">Confirmar
+                        Pago</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API = 'http://localhost:3000/api';
+        let currentPid = null;
+        let paymentAppId = null;
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            setupNav();
+            loadDashboard();
+            setupFiles();
+            checkCalendarStatus();
+        });
+
+        function setupNav() {
+            document.querySelectorAll('.sidebar a').forEach(l => {
+                l.onclick = (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.sidebar a').forEach(x => x.classList.remove('active'));
+                    e.target.closest('a').classList.add('active');
+                    document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+                    const sec = e.target.closest('a').dataset.section;
+                    document.getElementById(sec).style.display = 'block';
+                    if (sec === 'dashboard') loadDashboard();
+                    if (sec === 'patients') loadPatients();
+                    if (sec === 'appointments') loadAppointments();
+                    if (sec === 'files') loadFilesNav();
+                    if (sec === 'settings') loadSettings();
+                    if (sec === 'history') loadHistoryNav();
+                };
+            });
+        }
+
+        // Dashboard
+        async function loadDashboard() {
+            const res = await fetch(`${API}/dashboard`);
+            const data = await res.json();
+            document.getElementById('total-patients').innerText = data.totalPatients;
+            document.getElementById('today-appointments').innerText = data.todayAppointments;
+            document.getElementById('total-deposits').innerText = '$' + data.totalDeposits;
+        }
+
+        // Patients
+        async function loadPatients() {
+            const res = await fetch(`${API}/patients`);
+            const data = await res.json();
+            const tb = document.getElementById('patientsTable');
+            tb.innerHTML = data.map(p => `
+                <tr>
+                    <td><div class="patient-avatar">${p.name[0]}</div></td>
+                    <td>${p.name}<br><small>${p.phone}</small></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="delPatient(${p.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+            fillSelects(data);
+        }
+
+        document.getElementById('patientForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await fetch(`${API}/patients`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('pName').value,
+                    phone: document.getElementById('pPhone').value,
+                    email: document.getElementById('pEmail').value,
+                    birthdate: document.getElementById('pDob').value,
+                    address: document.getElementById('pAddress').value
+                })
+            });
+            e.target.reset();
+            loadPatients();
+            alert('Paciente guardado');
+        };
+
+        async function delPatient(id) {
+            if (confirm('Borrar?')) {
+                await fetch(`${API}/patients/${id}`, { method: 'DELETE' });
+                loadPatients();
+            }
+        }
+
+        function fillSelects(data) {
+            const opts = '<option value="">Seleccione...</option>' + data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            document.getElementById('aPatient').innerHTML = opts;
+            document.getElementById('historyPatientSelect').innerHTML = opts;
+        }
+
+        // Appointments
+        async function loadAppointments() {
+            const res = await fetch(`${API}/appointments`);
+            const data = await res.json();
+            document.getElementById('appointmentsTable').innerHTML = data.map(a => `
+                <tr>
+                    <td>${a.patientName}</td>
+                    <td>${a.date} ${a.time}</td>
+                    <td>${a.type}</td>
+                    <td><span class="badge ${a.status === 'confirmada' ? 'bg-success' : 'bg-warning'}">${a.status}</span></td>
+                    <td>
+                        ${a.status === 'pendiente' ? `<button class="btn btn-sm btn-success" onclick="confApp(${a.id}, ${a.deposit}, ${a.depositPaid})"><i class="fas fa-check"></i></button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('appointmentForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const body = {
+                patientId: document.getElementById('aPatient').value,
+                date: document.getElementById('aDate').value,
+                time: document.getElementById('aTime').value,
+                type: document.getElementById('aType').value,
+                deposit: document.getElementById('aDeposit').checked
+            };
+            await fetch(`${API}/appointments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            e.target.reset();
+            loadAppointments();
+            alert('Cita creada');
+        };
+
+        window.confApp = (id, dep, paid) => {
+            if (dep && !paid) {
+                paymentAppId = id;
+                new bootstrap.Modal(document.getElementById('paymentModal')).show();
+            } else {
+                updateAppStatus(id, 'confirmada');
+            }
+        };
+
+        document.getElementById('registerPaymentBtn').onclick = async () => {
+            await fetch(`${API}/appointments/${paymentAppId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'confirmada', depositPaid: true })
+            });
+            bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+            loadAppointments();
+        };
+
+        async function updateAppStatus(id, status) {
+            await fetch(`${API}/appointments/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            loadAppointments();
+        }
+
+        // Files
+        async function setupFiles() {
+            // Button triggers
+            const area = document.getElementById('fileUploadArea');
+            const input = document.getElementById('fileInput');
+
+            area.onclick = () => {
+                if (!currentPid) return alert('Seleccione un paciente de la lista primero');
+                input.click();
+            };
+
+            input.onchange = async () => {
+                if (!input.files.length) return;
+                const fd = new FormData();
+                fd.append('file', input.files[0]);
+                fd.append('patientId', currentPid);
+
+                try {
+                    const res = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+                    if (res.ok) {
+                        alert('Archivo subido');
+                        loadFiles(currentPid);
+                    } else alert('Error al subir');
+                } catch (e) { console.error(e); }
+                input.value = '';
+            };
+        }
+
+        async function loadFilesNav() {
+            const res = await fetch(`${API}/patients`);
+            const data = await res.json();
+            document.getElementById('patientFilesList').innerHTML = data.map(p => `
+                <a href="#" class="list-group-item list-group-item-action" onclick="loadFiles(${p.id}, '${p.name}')">${p.name}</a>
+            `).join('');
+        }
+
+        window.loadFiles = async (id, name) => {
+            currentPid = id;
+            if (name) document.getElementById('selectedPatientFiles').innerText = `Expediente: ${name}`;
+            const res = await fetch(`${API}/files/patient/${id}`);
+            const data = await res.json();
+            document.getElementById('attachmentsList').innerHTML = data.map(f => `
+                <div class="p-2 border mb-2 d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-file me-2"></i> ${f.file_name} (${f.size})</span>
+                    <a href="http://localhost:3000/${f.file_path}" target="_blank" class="btn btn-sm btn-primary">Ver</a>
+                </div>
+            `).join('');
+        };
+
+        // History
+        async function loadHistoryNav() {
+            const res = await fetch(`${API}/patients`);
+            const data = await res.json();
+            fillSelects(data);
+        }
+
+        document.getElementById('historyPatientSelect').onchange = async function () {
+            if (!this.value) return;
+            const res = await fetch(`${API}/appointments`); // Should filter by patient ideally
+            const data = await res.json();
+            const userApps = data.filter(a => a.patient_id == this.value);
+            document.getElementById('patientHistoryList').innerHTML = userApps.map(a => `
+                <div class="card mb-2"><div class="card-body">
+                    <h6>${a.date} - ${a.type}</h6>
+                    <p>${a.notes || ''}</p>
+                    <span class="badge bg-secondary">${a.status}</span>
+                </div></div>
+            `).join('');
+        };
+
+        // Settings
+        async function loadSettings() {
+            const res = await fetch(`${API}/settings`);
+            const data = await res.json();
+            if (data.deposit_amount) document.getElementById('setDeposit').value = data.deposit_amount;
+            if (data.reminder_days) document.getElementById('setReminder').value = data.reminder_days;
+            if (data.email_reminders) document.getElementById('setEmail').checked = data.email_reminders === 'true' || data.email_reminders === true;
+        }
+
+        document.getElementById('settingsForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const body = {
+                deposit_amount: document.getElementById('setDeposit').value,
+                reminder_days: document.getElementById('setReminder').value,
+                email_reminders: document.getElementById('setEmail').checked
+            };
+            await fetch(`${API}/settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            alert('Configuración guardada');
+        };
+
+        // Calendar
+        async function checkCalendarStatus() {
+            const res = await fetch(`${API}/calendar/status`);
+            const data = await res.json();
+            const st = document.getElementById('calendarStatus');
+            const btn = document.getElementById('connectCalendarBtn');
+            if (data.connected) {
+                st.className = 'alert alert-success';
+                st.innerHTML = 'Conectado a Google Calendar <i class="fas fa-check-circle"></i>';
+                btn.style.display = 'none';
+            } else {
+                st.className = 'alert alert-warning';
+                st.innerText = 'No conectado';
+                btn.style.display = 'block';
+            }
+        }
+
+        document.getElementById('connectCalendarBtn').onclick = () => {
+            window.open('http://localhost:3000/auth/google', '_blank', 'width=500,height=600');
+        };
+
+        document.getElementById('syncCalendarBtn').onclick = async () => {
+            const res = await fetch(`${API}/calendar/sync`, { method: 'POST' });
+            if (res.status === 401) return alert('Primero conecta tu cuenta');
+            const data = await res.json();
+            alert(`Sincronizados: ${data.synced} eventos`);
+        };
+
+    </script>
+</body>
+
+</html>
