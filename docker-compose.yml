@@ -39,8 +39,10 @@ services:
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
     restart: always
-    ports:
-      - "8080:80"
+    # Security: Enable ports only if you need direct IP access. 
+    # Better: Use Coolify Domains with HTTPS.
+    # ports:
+    #   - "8080:80"
     depends_on:
       - db
 
