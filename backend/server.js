@@ -332,7 +332,15 @@ app.get('/api/dashboard/income', (req, res) => {
         .catch(err => res.status(500).json({ error: err.message }));
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-    console.log(`Frontend accessible at http://localhost:${port}`);
+// Initialize DB and then start server
+const initDB = require('./migrate');
+
+initDB().then(() => {
+    app.listen(port, () => {
+        console.log(`Server running at http://localhost:${port}`);
+        console.log(`Frontend accessible at http://localhost:${port}`);
+    });
+}).catch(err => {
+    console.error('Failed to initialize database:', err);
+    // Optional: exit if DB is mandatory. For now, we log.
 });
