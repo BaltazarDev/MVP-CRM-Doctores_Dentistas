@@ -4,7 +4,8 @@ const connection = mysql.createConnection({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'crm_doctor'
+  database: process.env.DB_NAME || 'crm_doctor',
+  port: process.env.DB_PORT || 3306
 });
 
 console.log(`Attempting to connect to database at ${process.env.DB_HOST || 'localhost'} as ${process.env.DB_USER || 'root'}...`);
