@@ -7,6 +7,8 @@ const connection = mysql.createConnection({
   database: process.env.DB_NAME || 'crm_doctor'
 });
 
+console.log(`Attempting to connect to database at ${process.env.DB_HOST || 'localhost'} as ${process.env.DB_USER || 'root'}...`);
+
 connection.connect(error => {
   if (error) {
     console.error('Error connecting to the database:', error);

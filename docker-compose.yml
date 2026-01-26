@@ -31,5 +31,18 @@ services:
       - ./backend/setup.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: crm-phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
 volumes:
   db_data:
