@@ -150,6 +150,7 @@
                     Dashboard</a>
                 <a href="#" data-section="patients"><i class="fas fa-users me-2"></i> Pacientes</a>
                 <a href="#" data-section="appointments"><i class="fas fa-calendar-check me-2"></i> Citas</a>
+                <a href="#" data-section="payments"><i class="fas fa-money-bill-wave me-2"></i> Pagos</a>
                 <a href="#" data-section="history"><i class="fas fa-history me-2"></i> Historial</a>
                 <a href="#" data-section="files"><i class="fas fa-folder me-2"></i> Expedientes</a>
                 <a href="#" data-section="calendar"><i class="fas fa-calendar-alt me-2"></i> Google Calendar</a>
@@ -199,7 +200,16 @@
                 <!-- Patients -->
                 <div id="patients" class="content-section" style="display:none;">
                     <h2>Pacientes</h2>
-                    <div class="card card-custom p-3 mb-3">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <input type="text" id="searchPatientInput" class="form-control"
+                                placeholder="Buscar paciente por nombre..." onkeyup="filterPatients()">
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-primary" onclick="togglePatientForm()">+ Nuevo Paciente</button>
+                        </div>
+                    </div>
+                    <div class="card card-custom p-3 mb-3" id="patientFormCard" style="display:none;">
                         <h5>Registrar Nuevo</h5>
                         <form id="patientForm">
                             <div class="row">
@@ -244,8 +254,16 @@
                                         <option>Limpieza</option>
                                         <option>Ortodoncia</option>
                                     </select></div>
-                                <div class="col-md-6 mb-2 d-flex align-items-center"><input type="checkbox"
-                                        id="aDeposit" checked class="me-2"> Requerir Anticipo</div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" id="aDeposit" checked class="form-check-input">
+                                        <label class="form-check-label" for="aDeposit">Requerir Anticipo</label>
+                                    </div>
+                                    <div class="form-check form-check-inline" id="aDepositPaidWrapper">
+                                        <input type="checkbox" id="aDepositPaid" class="form-check-input">
+                                        <label class="form-check-label" for="aDepositPaid">Pagado Ahora</label>
+                                    </div>
+                                </div>
                                 <div class="col-12"><button type="submit" class="btn btn-custom w-100">Agendar</button>
                                 </div>
                             </div>
@@ -255,6 +273,43 @@
                         <div class="card-body">
                             <table class="table">
                                 <tbody id="appointmentsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payments Section -->
+                <div id="payments" class="content-section" style="display:none;">
+                    <h2>Pagos</h2>
+                    <div class="card card-custom p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Historial de Pagos</h5>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newPaymentModal"><i
+                                    class="fas fa-plus"></i> Registrar Pago</button>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <select id="paymentFilterPatient" class="form-control">
+                                    <option value="">Todos los Pacientes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" onclick="loadPaymentsModule()">Filtrar</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Paciente</th>
+                                        <th>Concepto</th>
+                                        <th>Tipo</th>
+                                        <th>Monto</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentsTable"></tbody>
                             </table>
                         </div>
                     </div>
@@ -345,6 +400,52 @@
         </div>
     </div>
 
+    <!-- New Payment Modal -->
+    <div class="modal fade" id="newPaymentModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Nuevo Pago</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newPaymentForm">
+                        <div class="mb-3">
+                            <label>Paciente</label>
+                            <select id="payPatient" class="form-control" required></select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Monto</label>
+                                <input type="number" id="payAmount" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Fecha</label>
+                                <input type="date" id="payDate" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label>Tipo</label>
+                            <select id="payType" class="form-select">
+                                <option>Consulta</option>
+                                <option>Limpieza</option>
+                                <option>Ortodoncia</option>
+                                <option>Cirugía</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Concepto</label>
+                            <textarea id="payConcept" class="form-control" rows="2"
+                                placeholder="Descripción del pago..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Guardar Pago</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API = 'http://localhost:3000/api';
@@ -371,6 +472,8 @@
                     if (sec === 'dashboard') loadDashboard();
                     if (sec === 'patients') loadPatients();
                     if (sec === 'appointments') loadAppointments();
+                    if (sec === 'appointments') loadAppointments();
+                    if (sec === 'payments') loadPaymentsModule();
                     if (sec === 'files') loadFilesNav();
                     if (sec === 'settings') loadSettings();
                     if (sec === 'history') loadHistoryNav();
@@ -383,23 +486,42 @@
             const res = await fetch(`${API}/dashboard`);
             const data = await res.json();
             document.getElementById('total-patients').innerText = data.totalPatients;
+            document.getElementById('total-patients').innerText = data.totalPatients;
             document.getElementById('today-appointments').innerText = data.todayAppointments;
             document.getElementById('total-deposits').innerText = '$' + data.totalDeposits;
+            updateChart(); // Load chart
         }
+
+        let allPatientsData = [];
 
         // Patients
         async function loadPatients() {
             const res = await fetch(`${API}/patients`);
-            const data = await res.json();
+            allPatientsData = await res.json();
+            renderPatients(allPatientsData);
+            fillSelects(allPatientsData);
+        }
+
+        function renderPatients(list) {
             const tb = document.getElementById('patientsTable');
-            tb.innerHTML = data.map(p => `
+            tb.innerHTML = list.map(p => `
                 <tr>
                     <td><div class="patient-avatar">${p.name[0]}</div></td>
                     <td>${p.name}<br><small>${p.phone}</small></td>
                     <td><button class="btn btn-sm btn-danger" onclick="delPatient(${p.id})"><i class="fas fa-trash"></i></button></td>
                 </tr>
             `).join('');
-            fillSelects(data);
+        }
+
+        function filterPatients() {
+            const term = document.getElementById('searchPatientInput').value.toLowerCase();
+            const filtered = allPatientsData.filter(p => p.name.toLowerCase().includes(term));
+            renderPatients(filtered);
+        }
+
+        function togglePatientForm() {
+            const f = document.getElementById('patientFormCard');
+            f.style.display = f.style.display === 'none' ? 'block' : 'none';
         }
 
         document.getElementById('patientForm').onsubmit = async (e) => {
@@ -431,6 +553,8 @@
             const opts = '<option value="">Seleccione...</option>' + data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
             document.getElementById('aPatient').innerHTML = opts;
             document.getElementById('historyPatientSelect').innerHTML = opts;
+            if (document.getElementById('payPatient')) document.getElementById('payPatient').innerHTML = opts;
+            if (document.getElementById('paymentFilterPatient')) document.getElementById('paymentFilterPatient').innerHTML = '<option value="">Todos los Pacientes</option>' + data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
         }
 
         // Appointments
@@ -457,7 +581,8 @@
                 date: document.getElementById('aDate').value,
                 time: document.getElementById('aTime').value,
                 type: document.getElementById('aType').value,
-                deposit: document.getElementById('aDeposit').checked
+                deposit: document.getElementById('aDeposit').checked,
+                depositPaid: document.getElementById('aDepositPaid').checked
             };
             await fetch(`${API}/appointments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             e.target.reset();
@@ -610,6 +735,122 @@
             const data = await res.json();
             alert(`Sincronizados: ${data.synced} eventos`);
         };
+
+        // --- Payment Logic ---
+        async function loadPaymentsModule() {
+            const pid = document.getElementById('paymentFilterPatient').value;
+            let url = `${API}/payments`;
+            if (pid) url += `?patientId=${pid}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const tb = document.getElementById('paymentsTable');
+            tb.innerHTML = data.map(p => `
+                <tr>
+                    <td>${p.date.split('T')[0]}</td>
+                    <td>${p.patientName}</td>
+                    <td>${p.concept || '-'}</td>
+                    <td><span class="badge bg-info">${p.type || 'General'}</span></td>
+                    <td class="fw-bold text-success">$${p.amount}</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="deletePayment(${p.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function deletePayment(id) {
+            if (confirm('Eliminar pago?')) {
+                await fetch(`${API}/payments/${id}`, { method: 'DELETE' });
+                loadPaymentsModule();
+                loadDashboard(); // Update stats
+            }
+        }
+
+        document.getElementById('newPaymentForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const body = {
+                patientId: document.getElementById('payPatient').value,
+                amount: document.getElementById('payAmount').value,
+                date: document.getElementById('payDate').value,
+                type: document.getElementById('payType').value,
+                concept: document.getElementById('payConcept').value
+            };
+            await fetch(`${API}/payments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            bootstrap.Modal.getInstance(document.getElementById('newPaymentModal')).hide();
+            e.target.reset(); // Reset form
+            loadPaymentsModule();
+            loadDashboard(); // Refresh dashboard stats
+            alert('Pago registrado');
+        };
+
+        // Chart Logic
+        let incomeChartIntance = null;
+        async function updateChart() {
+            const period = document.getElementById('chartPeriod').value;
+            let start, end;
+            const now = new Date();
+
+            if (period === 'day') {
+                start = end = now.toISOString().split('T')[0];
+            } else if (period === 'week') {
+                const first = now.getDate() - now.getDay();
+                start = new Date(now.setDate(first)).toISOString().split('T')[0];
+                end = new Date(now.setDate(first + 6)).toISOString().split('T')[0];
+            } else if (period === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+            } else if (period === 'year') {
+                start = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+                end = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+            }
+
+            // Fetch Data
+            try {
+                const res = await fetch(`${API}/dashboard/income?start=${start}&end=${end}`);
+                const data = await res.json();
+
+                // Render Income Chart (Bar)
+                const ctx = document.getElementById('incomeChart').getContext('2d');
+                if (incomeChartIntance) incomeChartIntance.destroy();
+
+                const labels = data.daily && data.daily.length ? data.daily.map(d => d.date.split('T')[0]) : [];
+                const values = data.daily && data.daily.length ? data.daily.map(d => d.total) : [];
+
+                incomeChartIntance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Ingresos',
+                            data: values,
+                            backgroundColor: 'rgba(76, 175, 80, 0.5)',
+                            borderColor: '#4CAF50',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+
+                // Render Type Chart (Doughnut)
+                const typeCtx = document.getElementById('typeChart').getContext('2d');
+                if (window.typeChartInstance) window.typeChartInstance.destroy();
+
+                const typeLabels = data.byType ? data.byType.map(t => t.type || 'General') : [];
+                const typeValues = data.byType ? data.byType.map(t => t.total) : [];
+
+                window.typeChartInstance = new Chart(typeCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: typeLabels,
+                        datasets: [{
+                            data: typeValues,
+                            backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#607D8B']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            } catch (error) {
+                console.error("Error loading charts", error);
+            }
+        }
 
     </script>
 </body>

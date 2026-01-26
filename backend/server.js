@@ -96,12 +96,45 @@ app.get('/api/appointments', (req, res) => {
         res.json(fmt);
     });
 });
-app.post('/api/appointments', (req, res) => {
-    const { patientId, date, time, type, notes, deposit } = req.body;
-    db.query('INSERT INTO appointments (patient_id, date, time, type, notes, deposit, deposit_paid, status) VALUES (?,?,?,?,?,?,0,"pendiente")', [patientId, date, time, type, notes, deposit ? 1 : 0], (err, r) => {
-        if (err) return res.status(500).send(err);
-        res.json({ id: r.insertId, message: 'Created' });
-    });
+app.post('/api/appointments', async (req, res) => {
+    const { patientId, date, time, type, notes, deposit, depositPaid } = req.body;
+
+    try {
+        let amount = 50; // Default
+        if (deposit) {
+            // Get amount from settings
+            const settings = await new Promise((resolve) => {
+                db.query('SELECT setting_value FROM settings WHERE setting_key = "deposit_amount"', (err, r) => {
+                    if (err || !r.length) resolve(null);
+                    else resolve(r[0].setting_value);
+                });
+            });
+            if (settings) amount = parseFloat(settings) || 50;
+        }
+
+        const isPaid = deposit && depositPaid;
+
+        // Insert Appointment
+        db.query('INSERT INTO appointments (patient_id, date, time, type, notes, deposit, deposit_paid, status) VALUES (?,?,?,?,?,?,?,?)',
+            [patientId, date, time, type, notes, deposit ? 1 : 0, isPaid ? 1 : 0, 'pendiente'],
+            (err, r) => {
+                if (err) return res.status(500).send(err);
+                const appId = r.insertId;
+
+                // If Paid, register in payments table
+                if (isPaid) {
+                    db.query('INSERT INTO payments (patient_id, amount, date, concept, type) VALUES (?,?,?,?,?)',
+                        [patientId, amount, new Date().toISOString().split('T')[0], `Anticipo Cita ${date} - ${type}`, 'Anticipo'],
+                        (err2) => {
+                            if (err2) console.error('Error auto-registering payment:', err2);
+                        });
+                }
+
+                res.json({ id: appId, message: 'Created' });
+            });
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
 });
 app.put('/api/appointments/:id', (req, res) => {
     const { status, depositPaid, googleCalendarSync } = req.body;
@@ -229,6 +262,73 @@ app.post('/api/calendar/sync', async (req, res) => {
         }
         res.json({ synced: successCount, total: appointments.length });
     });
+});
+
+// Payments
+app.get('/api/payments', (req, res) => {
+    const { patientId } = req.query;
+    let sql = 'SELECT y.*, p.name as patientName FROM payments y JOIN patients p ON y.patient_id = p.id';
+    const params = [];
+    if (patientId) {
+        sql += ' WHERE y.patient_id = ?';
+        params.push(patientId);
+    }
+    sql += ' ORDER BY y.date DESC';
+    db.query(sql, params, (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+app.post('/api/payments', (req, res) => {
+    const { patientId, amount, date, concept, type } = req.body;
+    db.query('INSERT INTO payments (patient_id, amount, date, concept, type) VALUES (?,?,?,?,?)',
+        [patientId, amount, date, concept, type], (err, r) => {
+            if (err) return res.status(500).send(err);
+            res.json({ id: r.insertId, message: 'Payment recorded' });
+        });
+});
+
+app.delete('/api/payments/:id', (req, res) => {
+    db.query('DELETE FROM payments WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'Deleted' });
+    });
+});
+
+// Dashboard Income Stats
+app.get('/api/dashboard/income', (req, res) => {
+    const { start, end } = req.query; // Expect YYYY-MM-DD
+    let startDate = start;
+    let endDate = end;
+
+    if (!startDate || !endDate) {
+        // Default to this month
+        const now = new Date();
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    }
+
+    const p1 = new Promise((resolve, reject) => {
+        db.query("SELECT SUM(amount) as total FROM payments WHERE date BETWEEN ? AND ?", [startDate, endDate], (e, r) => {
+            if (e) return reject(e);
+            resolve((r && r[0] && r[0].total) ? r[0].total : 0);
+        });
+    });
+
+    const p2 = new Promise((resolve, reject) => {
+        db.query("SELECT type, SUM(amount) as total FROM payments WHERE date BETWEEN ? AND ? GROUP BY type", [startDate, endDate], (e, r) => e ? reject(e) : resolve(r || []));
+    });
+
+    const p3 = new Promise((resolve, reject) => {
+        db.query("SELECT date, SUM(amount) as total FROM payments WHERE date BETWEEN ? AND ? GROUP BY date ORDER BY date", [startDate, endDate], (e, r) => e ? reject(e) : resolve(r || []));
+    });
+
+    Promise.all([p1, p2, p3])
+        .then(([total, byType, daily]) => {
+            res.json({ total, byType, daily });
+        })
+        .catch(err => res.status(500).json({ error: err.message }));
 });
 
 app.listen(port, () => {

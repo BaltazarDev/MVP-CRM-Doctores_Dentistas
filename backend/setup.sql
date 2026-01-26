@@ -37,6 +37,17 @@ CREATE TABLE IF NOT EXISTS files (
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT,
+    amount DECIMAL(10, 2) NOT NULL,
+    date DATE NOT NULL,
+    concept TEXT,
+    type VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+);
+
 -- Insert sample data
 INSERT INTO patients (name, phone, email, birthdate, address, notes, registration_date) VALUES 
 ('Ana García', '555-1234', 'ana@example.com', '1985-05-15', 'Calle Principal 123', 'Alergia a la penicilina', '2023-06-10'),
