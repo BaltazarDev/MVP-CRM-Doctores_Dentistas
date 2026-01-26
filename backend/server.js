@@ -137,19 +137,58 @@ app.post('/api/appointments', async (req, res) => {
         res.status(500).send(e.message);
     }
 });
-app.put('/api/appointments/:id', (req, res) => {
+app.put('/api/appointments/:id', async (req, res) => {
     const { status, depositPaid, googleCalendarSync } = req.body;
-    let sql = 'UPDATE appointments SET ';
-    const vals = [];
-    if (status) { sql += 'status=?,'; vals.push(status); }
-    if (depositPaid !== undefined) { sql += 'deposit_paid=?,'; vals.push(depositPaid ? 1 : 0); }
-    if (googleCalendarSync !== undefined) { sql += 'google_calendar_sync=?,'; vals.push(googleCalendarSync ? 1 : 0); }
-    sql = sql.slice(0, -1) + ' WHERE id=?';
-    vals.push(req.params.id);
-    db.query(sql, vals, (err) => {
-        if (err) return res.status(500).send(err);
+
+    try {
+        // Update Appointment
+        let sql = 'UPDATE appointments SET ';
+        const vals = [];
+        if (status) { sql += 'status=?,'; vals.push(status); }
+        if (depositPaid !== undefined) { sql += 'deposit_paid=?,'; vals.push(depositPaid ? 1 : 0); }
+        if (googleCalendarSync !== undefined) { sql += 'google_calendar_sync=?,'; vals.push(googleCalendarSync ? 1 : 0); }
+
+        if (vals.length === 0) return res.json({ message: 'Nothing to update' });
+
+        sql = sql.slice(0, -1) + ' WHERE id=?';
+        vals.push(req.params.id);
+
+        await new Promise((resolve, reject) => {
+            db.query(sql, vals, (err) => err ? reject(err) : resolve());
+        });
+
+        // Use Promise handling for cleaner flow but no double-response
+        if (depositPaid === true) {
+            // Fetch appointment details to register payment
+            db.query(`SELECT status, deposit, deposit_paid, patient_id, date, type FROM appointments WHERE id = ?`, [req.params.id], async (err, results) => {
+                if (err || !results.length) return; // Silent fail on background task or log
+                const appt = results[0];
+
+                // Get amount
+                let amount = 50;
+                try {
+                    const settings = await new Promise((resolve) => {
+                        db.query('SELECT setting_value FROM settings WHERE setting_key = "deposit_amount"', (err, r) => {
+                            if (err || !r.length) resolve(null);
+                            else resolve(r[0].setting_value);
+                        });
+                    });
+                    if (settings) amount = parseFloat(settings) || 50;
+                } catch (e) { }
+
+                // Insert Payment
+                db.query('INSERT INTO payments (patient_id, amount, date, concept, type) VALUES (?,?,?,?,?)',
+                    [appt.patient_id, amount, new Date().toISOString().split('T')[0], `Anticipo Cita ${appt.date} - ${appt.type} (Confirmada)`, 'Anticipo'],
+                    (err2) => {
+                        if (err2) console.error('Error auto-registering payment on update:', err2);
+                    });
+            });
+        }
+
         res.json({ message: 'Updated' });
-    });
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
 });
 
 // Files
