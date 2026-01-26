@@ -41,6 +41,38 @@
             padding-left: 30px;
         }
 
+        /* Mobile Sidebar Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -250px;
+                width: 250px;
+                height: 100%;
+                z-index: 1050;
+                transition: 0.3s;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1040;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+
         .logo {
             padding: 20px;
             text-align: center;
@@ -142,10 +174,17 @@
 
 <body>
     <div class="container-fluid">
+        <div class="overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
         <div class="row">
+            <!-- Mobile Header -->
+            <div class="col-12 d-md-none bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+                <span class="fs-4"><i class="fas fa-stethoscope me-2"></i> CRM Médico</span>
+                <button class="btn btn-outline-light" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            </div>
+
             <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 sidebar">
-                <div class="logo"><i class="fas fa-stethoscope me-2"></i> CRM Médico</div>
+            <div class="col-md-3 col-lg-2 sidebar" id="mainSidebar">
+                <div class="logo d-none d-md-block"><i class="fas fa-stethoscope me-2"></i> CRM Médico</div>
                 <a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt me-2"></i>
                     Dashboard</a>
                 <a href="#" data-section="patients"><i class="fas fa-users me-2"></i> Pacientes</a>
@@ -466,12 +505,15 @@
                     e.preventDefault();
                     document.querySelectorAll('.sidebar a').forEach(x => x.classList.remove('active'));
                     e.target.closest('a').classList.add('active');
+
+                    // Close sidebar on mobile when link clicked
+                    if (window.innerWidth < 768) toggleSidebar();
+
                     document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
                     const sec = e.target.closest('a').dataset.section;
                     document.getElementById(sec).style.display = 'block';
                     if (sec === 'dashboard') loadDashboard();
                     if (sec === 'patients') loadPatients();
-                    if (sec === 'appointments') loadAppointments();
                     if (sec === 'appointments') loadAppointments();
                     if (sec === 'payments') loadPaymentsModule();
                     if (sec === 'files') loadFilesNav();
@@ -479,6 +521,11 @@
                     if (sec === 'history') loadHistoryNav();
                 };
             });
+        }
+
+        function toggleSidebar() {
+            document.getElementById('mainSidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
         }
 
         // Dashboard
