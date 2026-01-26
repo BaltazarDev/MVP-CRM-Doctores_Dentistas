@@ -62,3 +62,16 @@ INSERT INTO appointments (patient_id, date, time, type, notes, deposit, deposit_
 (4, '2023-08-17', '16:00', 'Extracción', 'Extracción de muela del juicio', TRUE, TRUE, 'confirmada', TRUE),
 (1, '2023-08-10', '09:30', 'Consulta', 'Seguimiento de tratamiento', TRUE, TRUE, 'completada', TRUE),
 (2, '2023-08-05', '15:00', 'Limpieza', 'Primera limpieza del año', TRUE, TRUE, 'completada', TRUE);
+
+CREATE TABLE IF NOT EXISTS settings (
+    setting_key VARCHAR(50) PRIMARY KEY,
+    setting_value TEXT
+);
+
+INSERT IGNORE INTO settings (setting_key, setting_value) VALUES 
+('deposit_amount', '50'),
+('payment_methods', '["Efectivo", "Tarjeta"]'),
+('email_reminders', 'true'),
+('sms_reminders', 'false'),
+('reminder_days', '2'),
+('google_calendar_token', '');
